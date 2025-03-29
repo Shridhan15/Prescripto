@@ -7,3 +7,7 @@
     /* to apply underline on Link present in Navbar */
     @apply block
 }
+
+::-webkit-scrollbar{
+    @apply hidden
+}
