@@ -5,9 +5,10 @@ export const AppContext=createContext();
 
 const AppContextProvider=(props)=>{
 
-
+    const currenySymbol='$';
     const value={
-        doctors
+        doctors,
+        currenySymbol
     }
     return(
         // means all the child componentes wrapped inside AppContextProvider will be able to access the context data
