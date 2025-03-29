@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+@theme{
+    --color-primary:#5f6fff
+}
+.active hr{
+    /* to apply underline on Link present in Navbar */
+    @apply block
+}
