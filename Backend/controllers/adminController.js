@@ -82,5 +82,19 @@ const loginAdmin= async (req,res)=>{
     }
 }
 
+//API to get all doc list for admin panel
+const allDoctors=async(req,res)=>{
+    try{
+        //get doctor info except password
+        const doctors=await doctorModel.find({}).select('-password')
+        res.json({success:true, doctors})
+    }
+    catch{
+        console.log(error)
+        res.json({ success: false, message: error.message })
 
-export { addDoctor,loginAdmin }
+    }
+
+}
+
+export { addDoctor,loginAdmin,allDoctors }
