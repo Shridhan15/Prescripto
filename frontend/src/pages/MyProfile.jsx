@@ -1,23 +1,27 @@
-import React, { useDebugValue, useState } from "react";
+import React, { useContext, useDebugValue, useState } from "react";
 import { assets } from "../assets/assets";
+import { AppContext } from "../context/AppContext";
 
 const MyProfile = () => {
-  const [userData, setUserData] = useState({
-    name: "Edward Vincent",
-    image: assets.profile_pic,
-    email: "richardjames@gmail.com",
-    phone: "+21 999-8989-00",
-    address: {
-      line1: "57th Cross, Richmond",
-      line2: "Circle, Church Road, London",
-    },
-    gender: "Male",
-    dob: "2001-01-20",
-  });
+  //earlier we displayed profile using raw data, now we will display profile by getting data from backend
+  // const [userData, setUserData] = useState({
+  //   name: "Edward Vincent",
+  //   image: assets.profile_pic,
+  //   email: "richardjames@gmail.com",
+  //   phone: "+21 999-8989-00",
+  //   address: {
+  //     line1: "57th Cross, Richmond",
+  //     line2: "Circle, Church Road, London",
+  //   },
+  //   gender: "Male",
+  //   dob: "2001-01-20",
+  // });
+
+  const {userData,setUserData}=useContext(AppContext)
 
   const [isEdit, setIsEdit] = useState(false);
 
-  return (
+  return userData && (
     <div className="max-w-lg flex flex-col gap-2 text-sm">
       <div>
         <img className="w-3/6 rounded " src={userData.image} alt="" />
