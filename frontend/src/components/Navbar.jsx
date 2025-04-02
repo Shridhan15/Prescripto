@@ -1,13 +1,21 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { assets } from "../assets//assets";
 import { NavLink, useNavigate } from "react-router-dom";
+import { AppContext } from "../context/AppContext";
 const Navbar = () => {
   // hidden is to hide tag in sm(phone) devices
 
   const navigate = useNavigate(); //hook to redirect to login page after clicking create account button
 
   const [showMenu, setShowMenu] = useState(false);
-  const [token, setToken] = useState(true); //token means logged in
+  // const [token, setToken] = useState(true); //token means logged in, it was temporary token used before created apis
+
+  const {token,setToken} =useContext(AppContext)
+
+  const logout=()=>{
+    setToken(false)
+    localStorage.removeItem('token')
+  }
 
   return (
     <div className="flex items-center justify-between text-sm  py-4 mb-5 border-b border-b-gray-400">
@@ -64,7 +72,7 @@ const Navbar = () => {
                     My Appointments
                   </p>
                   <p
-                    onClick={() => setToken(false)}
+                    onClick={logout}
                     className="hover:text-black cursor-pointer"
                   >
                     Logout

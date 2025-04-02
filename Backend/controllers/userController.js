@@ -32,7 +32,7 @@ const registerUser= async(req,res)=>{
         const user=await newUser.save()
 
         const token= jwt.sign({id:user._id},process.env.JWT_SECRET)
-        res.json({succes:true, token})
+        res.json({success:true, token})
 
     } catch (error) {
         console.log(error)
@@ -42,4 +42,28 @@ const registerUser= async(req,res)=>{
 
 }
 
-export {registerUser}
+// api fro user login 
+const loginUser= async (req,res)=>{
+    try {
+        const {email,password}=req.body;
+        const user= await userModel.findOne({email})
+        if(!user){
+            return res.json({ success: false, message: 'User doest not exists' })
+
+        }
+        const isMatch= await bcrypt.compare(password, user.password);
+        if(isMatch){
+            const token= jwt.sign({id:user._id},process.env.JWT_SECRET)
+            res.json({success:true, token})
+        } else{
+            res.json({success:false, message:"Invalid credentials"})
+        }
+        
+    } catch (error) {
+        
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+export {registerUser,loginUser}
