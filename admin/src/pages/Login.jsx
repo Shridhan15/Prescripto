@@ -15,7 +15,7 @@ const Login = () => {
         event.preventDefault();//so that it will not reload webpage
         try{
             if(state==="Admin"){
-
+                // on form submission request is sent to  backend and data is receiced, if success then extract the token send by backend and store it
                 const {data}=await axios.post(backendUrl+'/api/admin/login',{email,password})
                 if(data.success){
                     localStorage.setItem("aToken",data.token)//store token in local storage to stay loggin after reload
