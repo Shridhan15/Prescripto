@@ -161,9 +161,38 @@ const bookAppointment = async (req, res) => {
 //  api to get user appointment for frontend my-appointment page
 const listAppointment = async (req, res) => {
     try {
-        const {userId}=req.body
-        const appointments= await appointmentModel.find({userId})//get appontment of particular user
-        res.json({success:true,appointments})
+        const { userId } = req.body
+        const appointments = await appointmentModel.find({ userId })//get appontment of particular user
+        res.json({ success: true, appointments })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// api to cancel appointment
+const cancelAppointment = async (req, res) => {
+    try {
+        //get userId from auth user middleware and appointmentId is provided while cancelling
+        const { userId, appointmentId } = req.body;
+        const appointmentData = await appointmentModel.findById(appointmentId)
+        //verify appointment user
+        if (appointmentData.userId != userId) {
+            return res.json({ success: false, message: "Unauthorized action" })
+
+        }
+        await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
+
+        //releasing doctor Slot
+        const { docId, slotDate, slotTime } = appointmentData
+        const doctorData = await doctorModel.findById(docId)
+
+        let slots_booked=doctorData.slots_booked
+        slots_booked[slotDate]=slots_booked[slotDate].filter(e=>e!==slotTime)
+
+        await doctorModel.findByIdAndUpdate(docId,{slots_booked})
+
+        res.json({success:true, message:"Appointment Cancelled"})
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })
@@ -171,4 +200,4 @@ const listAppointment = async (req, res) => {
 }
 
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment,listAppointment }
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment,cancelAppointment }
