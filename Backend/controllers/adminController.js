@@ -5,6 +5,7 @@ import { v2 as cloudinary } from 'cloudinary'
 import { json } from 'express';
 import doctorModel from '../models/doctorModel.js';
 import jwt from 'jsonwebtoken'
+import appointmentModel from '../models/appointmentModel.js';
 
 const addDoctor = async (req, res) => {
     try {
@@ -63,19 +64,19 @@ const addDoctor = async (req, res) => {
 }
 
 //API for admin login
-const loginAdmin= async (req,res)=>{
-    try{
-        const {email,password}=req.body;
-        if(email===process.env.ADMIN_EMAIL && password===process.env.ADMIN_PASSWORD){
-            const token=jwt.sign(email+password, process.env.JWT_SECRET);//generate token in case of right credentials
-            res.json({success:true, token})
+const loginAdmin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+            const token = jwt.sign(email + password, process.env.JWT_SECRET);//generate token in case of right credentials
+            res.json({ success: true, token })
         }
 
-        else{
-            res.json({success:false, message:"Invalid credentials"})
+        else {
+            res.json({ success: false, message: "Invalid credentials" })
         }
     }
-    catch{
+    catch {
         console.log(error)
         res.json({ success: false, message: error.message })
 
@@ -83,13 +84,13 @@ const loginAdmin= async (req,res)=>{
 }
 
 //API to get all doc list for admin panel
-const allDoctors=async(req,res)=>{
-    try{
+const allDoctors = async (req, res) => {
+    try {
         //get doctor info except password
-        const doctors=await doctorModel.find({}).select('-password')
-        res.json({success:true, doctors})
+        const doctors = await doctorModel.find({}).select('-password')
+        res.json({ success: true, doctors })
     }
-    catch{
+    catch {
         console.log(error)
         res.json({ success: false, message: error.message })
 
@@ -97,4 +98,43 @@ const allDoctors=async(req,res)=>{
 
 }
 
-export { addDoctor,loginAdmin,allDoctors }
+// api to get all appointment list
+const appointmentAdmin = async (req, res) => {
+    try {
+        const appointments = await appointmentModel.find({})
+        res.json({ success: true, appointments })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+
+//api to cancle appointment
+const appointmentCancel = async (req, res) => {
+    try {
+        //get userId from auth user middleware and appointmentId is provided while cancelling
+        const { appointmentId } = req.body;
+        const appointmentData = await appointmentModel.findById(appointmentId)
+
+        await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
+
+        //releasing doctor Slot
+        const { docId, slotDate, slotTime } = appointmentData
+        const doctorData = await doctorModel.findById(docId)
+
+        let slots_booked = doctorData.slots_booked
+        slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime)
+
+        await doctorModel.findByIdAndUpdate(docId, { slots_booked })
+
+        res.json({ success: true, message: "Appointment Cancelled" })
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+
+//api to get dashboard data for admin panel
+export { addDoctor, loginAdmin, allDoctors, appointmentAdmin, appointmentCancel }
