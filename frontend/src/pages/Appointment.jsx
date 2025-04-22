@@ -28,6 +28,7 @@ const Appointments = () => {
 
   //Date Login **
   const getAvailableSlots = async () => {
+    if (!docInfo) return;
     setDocSlots([]);
 
     //getting current data
@@ -106,7 +107,7 @@ const Appointments = () => {
       let year = date.getFullYear();
 
       const slotDate = day + "_" + month + "_" + year;
-       // console.log(slotDate);
+      // console.log(slotDate);
       const { data } = await axios.post(
         // console.log(slotDate);
 
