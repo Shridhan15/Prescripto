@@ -57,15 +57,49 @@ const loginDoctor = async (req, res) => {
 }
 
 // api to get doctor appointments for doctor pannel
-const appointmentsDoctor= async(req,res)=>{
+const appointmentsDoctor = async (req, res) => {
     try {
-        const {docId}=req.body
-        const appointments= await appointmentModel.find({docId})
-        res.json({success:true,appointments})
+        const { docId } = req.body
+        const appointments = await appointmentModel.find({ docId })
+        res.json({ success: true, appointments })
 
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })
     }
 }
-export { changeAvailability, doctorList, loginDoctor,appointmentsDoctor }
+
+//api to mark appointment completed for doctor pannel
+const appointmentComplete = async (req, res) => {
+    try {
+        const { docId, appointmentId } = req.body //appointmentId will be passed
+        const appointmentData = await appointmentModel.findById(appointmentId)
+        if (appointmentData && appointmentData.docId === docId) {
+            await appointmentModel.findByIdAndUpdate(appointmentId, { isCompleted: true })
+            return res.json({ success: true, message: "Appointment Completed" })
+        } else {
+            return res.json({ success: false, message: "Mark Failed" })
+        }
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+//api to cancel appointment completed for doctor pannel
+const appointmentCancel = async (req, res) => {
+    try {
+        const { docId, appointmentId } = req.body //appointmentId will be passed
+        const appointmentData = await appointmentModel.findById(appointmentId)
+        if (appointmentData && appointmentData.docId === docId) {
+            await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
+            return res.json({ success: true, message: "Appointment Cancelled" })
+        } else {
+            return res.json({ success: false, message: "Cancellation Failed" })
+        }
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+export { changeAvailability, doctorList, loginDoctor, appointmentsDoctor, appointmentCancel, appointmentComplete }
