@@ -8,7 +8,7 @@ const Doctors = () => {
 
   //displaying the doctor as per type of choice(filter)
   const [filterDoc, setFilterDoc] = useState([]);
-  const [showfilter,setShowFilter]=useState(false);
+  const [showfilter, setShowFilter] = useState(false);
   const navigate = useNavigate();
   const { doctors } = useContext(AppContext);
 
@@ -29,8 +29,19 @@ const Doctors = () => {
     <div>
       <p className="text-gray-600 ">Browse through the doctors speciality.</p>
       <div className="flex flex-col gap-5 sm:flex-row items-start mt-5">
-        <button className={`py-1 border rounded text-sm transition-all sm:hidden ${showfilter? 'bg-primary text-white': ''} `} onClick={()=>setShowFilter(prev=> !prev)}>Filters</button>
-        <div className= {` flex-col gap-4 text-sm text-gray-600 ${showfilter ? 'flex':'hidden sm:flex'}`}>
+        <button
+          className={`py-1 border rounded text-sm transition-all sm:hidden ${
+            showfilter ? "bg-primary text-white" : ""
+          } `}
+          onClick={() => setShowFilter((prev) => !prev)}
+        >
+          Filters
+        </button>
+        <div
+          className={` flex-col gap-4 text-sm text-gray-600 ${
+            showfilter ? "flex" : "hidden sm:flex"
+          }`}
+        >
           <p
             onClick={() =>
               speciality === "General physician"
@@ -117,9 +128,17 @@ const Doctors = () => {
             >
               <img className="bg-blue-50" src={item.image} alt="" />
               <div className="p-4">
-                <div className="flex items-center gap-2 text-sm text-center text-green-500">
-                  <p className="w-2 h-2 bg-green-500 rounded-full"></p>
-                  <p>Available</p>
+                <div
+                  className={`flex items-center gap-2 text-sm text-center ${
+                    item.available ? "text-green-500" : "text-gray-500"
+                  } `}
+                >
+                  <p
+                    className={`w-2 h-2 ${
+                      item.available ? "bg-green-500 " : "bg-gray-500"
+                    } rounded-full`}
+                  ></p>
+                  <p>{item.available ? "Available" : "Not Available"} </p>
                 </div>
                 <p className="text-gray-900 text-lg font-medium">{item.name}</p>
                 <p className="text-gray-600 text-sm">{item.speciality}</p>
