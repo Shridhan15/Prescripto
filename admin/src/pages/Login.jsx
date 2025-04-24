@@ -1,76 +1,124 @@
-import React, {useContext, useState} from 'react'
-import {assets} from '../assets/assets'
-import { AdminContext } from '../context/AdminContext'
-import axios from 'axios'
-import { toast } from 'react-toastify'
-import { DoctorContext } from '../context/DoctorContext'
+import React, { useContext, useState } from "react";
+import { assets } from "../assets/assets";
+import { AdminContext } from "../context/AdminContext";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { DoctorContext } from "../context/DoctorContext";
+import eyeopen from "../assets/eye-open.png";
+import eyeclose from "../assets/eye-close.png";
 
 const Login = () => {
-    const [state,setState]=useState('Admin')
-    const [email,setEmail]=useState('')
-    const [password,setPassword]=useState('')
+  const [state, setState] = useState("Admin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [type, setType] = useState("password");
 
-    const {setAToken,backendUrl}=useContext(AdminContext)
-    const {setDToken}=useContext(DoctorContext)
-    const onSubmitHandler= async (event)=>{
-        event.preventDefault();//so that it will not reload webpage
-        try{
-            if(state==="Admin"){
-                // on form submission request is sent to  backend and data is receiced, if success then extract the token send by backend and store it
-                const {data}=await axios.post(backendUrl+'/api/admin/login',{email,password})
-                if(data.success){
-                    localStorage.setItem("aToken",data.token)//store token in local storage to stay loggin after reload
-                    setAToken(data.token)
-                }else{
-                    // displaying  toast notification 
-                    toast.error(data.message);
-
-                }
-
-            }
-            else{
-                const  {data}= await axios.post(backendUrl+"/api/doctor/login",{email,password})
-                if(data.success){
-                    localStorage.setItem("dToken",data.token)//store token in local storage to stay loggin after reload
-                    setDToken(data.token)
-                    console.log(data.token)
-                }else{
-                     
-                    toast.error(data.message);
-
-                }
-
-            }
+  const { setAToken, backendUrl } = useContext(AdminContext);
+  const { setDToken } = useContext(DoctorContext);
+  const onSubmitHandler = async (event) => {
+    event.preventDefault(); //so that it will not reload webpage
+    try {
+      if (state === "Admin") {
+        // on form submission request is sent to  backend and data is receiced, if success then extract the token send by backend and store it
+        const { data } = await axios.post(backendUrl + "/api/admin/login", {
+          email,
+          password,
+        });
+        if (data.success) {
+          localStorage.setItem("aToken", data.token); //store token in local storage to stay loggin after reload
+          setAToken(data.token);
+        } else {
+          // displaying  toast notification
+          toast.error(data.message);
         }
-        catch{
-
+      } else {
+        const { data } = await axios.post(backendUrl + "/api/doctor/login", {
+          email,
+          password,
+        });
+        if (data.success) {
+          localStorage.setItem("dToken", data.token); //store token in local storage to stay loggin after reload
+          setDToken(data.token);
+          console.log(data.token);
+        } else {
+          toast.error(data.message);
         }
+      }
+    } catch {}
+  };
+
+  const changeType = () => {
+    if (type === "text") {
+      setType("password");
+    } else {
+      setType("text");
     }
-
-
+  };
 
   return (
-    <form onSubmit={onSubmitHandler} className='min-h-[80vh]  flex items-center'>
-        <div className='flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-[#5e5e5e] text-sm shadow-lg'>
-            <p className='text-2xl font-semibold  m-auto'><span className='text-primary'>{state}</span> Login</p>
-            <div className='w-full'>
-                <p>Email</p>
-                <input onChange={(e)=>setEmail(e.target.value)} value={email} className='border border-[#dadada] rounded w-full p-2 mt-1 ' type="email" required />
-            </div>
-            <div className='w-full'>
-                <p>Password</p>
-                <input  onChange={(e)=>setPassword(e.target.value)} value={password} className='border border-[#dadada] rounded w-full p-2 mt-1 ' type="password" required />
-            </div>
-            <button className='cursor-pointer bg-primary text-white w-full py-2 rounded-md text-base'>Login</button>
-            {
-                state==="Admin" 
-                ? <p>Doctor Login? <span className='cursor-pointer text-primary underline' onClick={()=>setState('Doctor')}>Click here</span></p>
-                : <p>Admin Login? <span className='cursor-pointer text-primary underline' onClick={()=>setState('Admin')}>Click here</span></p>
-
-            }
+    <form
+      onSubmit={onSubmitHandler}
+      className="min-h-[80vh]  flex items-center"
+    >
+      <div className="flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-[#5e5e5e] text-sm shadow-lg">
+        <p className="text-2xl font-semibold  m-auto">
+          <span className="text-primary">{state}</span> Login
+        </p>
+        <div className="w-full">
+          <p>Email</p>
+          <input
+            onChange={(e) => setEmail(e.target.value)}
+            value={email}
+            className="border border-[#dadada] rounded w-full p-2 mt-1 "
+            type="email"
+            required
+          />
         </div>
+        <div className="w-full">
+          <p>Password</p>
+          <div className="flex">
+            <input
+              onChange={(e) => setPassword(e.target.value)}
+              value={password}
+              className="border border-[#dadada] rounded w-full p-2 mt-1 "
+              type={type}
+              required
+            />
+            <img
+              onClick={changeType}
+              className=" w-9 h-8 mt-1.5 cursor-pointer"
+              src={type == "text" ? eyeopen : eyeclose}
+              alt=""
+            />
+          </div>
+        </div>
+        <button className="cursor-pointer bg-primary text-white w-full py-2 rounded-md text-base">
+          Login
+        </button>
+        {state === "Admin" ? (
+          <p>
+            Doctor Login?{" "}
+            <span
+              className="cursor-pointer text-primary underline"
+              onClick={() => setState("Doctor")}
+            >
+              Click here
+            </span>
+          </p>
+        ) : (
+          <p>
+            Admin Login?{" "}
+            <span
+              className="cursor-pointer text-primary underline"
+              onClick={() => setState("Admin")}
+            >
+              Click here
+            </span>
+          </p>
+        )}
+      </div>
     </form>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

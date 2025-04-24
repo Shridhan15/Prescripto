@@ -1,56 +1,65 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AppContext } from "../context/AppContext";
-import axios  from "axios";
+import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import eyeopen from "../assets/eye-open.png";
+import eyeclose from "../assets/eye-close.png";
 
 const Login = () => {
-
-  const {backendUrl,token,setToken}=useContext(AppContext)
-  const navigate =useNavigate();
+  const { backendUrl, token, setToken } = useContext(AppContext);
+  const navigate = useNavigate();
 
   const [state, setState] = useState("Sign Up");
+  const [type, setType] = useState("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
-
-
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     try {
-      if(state==='Sign Up'){
-        const {data}=await axios.post(backendUrl+'/api/user/register',{name,password,email})
-        if(data.success){
-          localStorage.setItem('token',data.token)
-          setToken(data.token)
-        }else{
-          toast.error(data.message)
+      if (state === "Sign Up") {
+        const { data } = await axios.post(backendUrl + "/api/user/register", {
+          name,
+          password,
+          email,
+        });
+        if (data.success) {
+          localStorage.setItem("token", data.token);
+          setToken(data.token);
+        } else {
+          toast.error(data.message);
         }
-      }
-      else{
-        const {data}=await axios.post(backendUrl+'/api/user/login',{password,email})
-        if(data.success){
-          localStorage.setItem('token',data.token)
-          setToken(data.token)
-        }else{
-          toast.error(data.message)
+      } else {
+        const { data } = await axios.post(backendUrl + "/api/user/login", {
+          password,
+          email,
+        });
+        if (data.success) {
+          localStorage.setItem("token", data.token);
+          setToken(data.token);
+        } else {
+          toast.error(data.message);
         }
-
       }
     } catch (error) {
-      toast.error(error.message)
+      toast.error(error.message);
     }
   };
 
-
-  useEffect(()=>{
-    if(token){
-        navigate('/')
+  const changeType=()=>{
+    if(type==="text"){
+      setType("password")
+    }else{
+      setType("text")
     }
-  },[token])
-
-
+  }
+  useEffect(() => {
+    if (token) {
+      navigate("/");
+    }
+  }, [token]);
 
   return (
     <form onSubmit={onSubmitHandler} className="min-h-[80vh] flex items-center">
@@ -87,15 +96,21 @@ const Login = () => {
         </div>
         <div className="w-full ">
           <p>Password</p>
-          <input
-            className="border border-zinc-300 rounded w-full p-2 mt-1"
-            type="password"
-            onChange={(e) => setPassword(e.target.value)}
-            value={password}
-            required
-          />
+          <div className="flex">
+            <input
+              className="border border-zinc-300 rounded w-full p-2 mt-1"
+              type={type}
+              onChange={(e) => setPassword(e.target.value)}
+              value={password}
+              required
+            />
+            <img onClick={changeType} className=" w-9 h-8 mt-1.5 cursor-pointer" src={ type=="text"? eyeopen : eyeclose} alt="" />
+          </div>
         </div>
-        <button type="submit" className="cursor-pointer bg-primary text-white w-full py-2 rounded-md text-balance">
+        <button
+          type="submit"
+          className="cursor-pointer bg-primary text-white w-full py-2 rounded-md text-balance"
+        >
           {state === "Sign Up" ? "Create Account" : "Login "}{" "}
         </button>
         {state === "Sign Up" ? (
