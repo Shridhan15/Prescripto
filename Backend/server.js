@@ -16,11 +16,10 @@ connectCloudinary()
 app.use(express.json())
 app.use(cors()) // allow connecting frontend and backend
 
-// api end point
+// api end point for admin doctor and user
 app.use("/api/admin",adminRouter)//localhost/4000/api/admin/add-doctor
 app.use('/api/doctor',doctorRouter)
 app.use('/api/user',userRouter)
-
 
 app.get('/', (req, res) => {
     res.send("API WORKING")
