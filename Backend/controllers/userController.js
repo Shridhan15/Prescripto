@@ -6,6 +6,7 @@ import { v2 as cloudinary } from 'cloudinary'
 import doctorModel from '../models/doctorModel.js';
 import appointmentModel from '../models/appointmentModel.js';
 import razorpay from 'razorpay'
+import Query from '../models/Query.js';
 
 // api to register user 
 const registerUser = async (req, res) => {
@@ -242,11 +243,11 @@ const verifyRazorpay = async (req, res) => {
         // console.log(orderInfo)
 
         //we are passing appointmetid as reciept, and we have to mark payment as true for that appointment
-        if(orderInfo.status==="paid"){
-            await appointmentModel.findByIdAndUpdate(orderInfo.receipt,{payment:true})
-            res.json({success:"true",message:"Payment Successful"})
-        }else{
-            res.json({success:"false",message:"Payment Failed"})
+        if (orderInfo.status === "paid") {
+            await appointmentModel.findByIdAndUpdate(orderInfo.receipt, { payment: true })
+            res.json({ success: "true", message: "Payment Successful" })
+        } else {
+            res.json({ success: "false", message: "Payment Failed" })
         }
 
     } catch (error) {
@@ -255,4 +256,21 @@ const verifyRazorpay = async (req, res) => {
     }
 }
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay,verifyRazorpay}
+const Support = async (req, res) => {
+    const { name, email, phone, message } = req.body;
+
+    try {
+        await Query.create({
+            name,
+            email,
+            phone,
+            message
+        });
+
+        res.status(200).json({ success: true, msg: "Support message sent successfully!" });
+    } catch (err) {
+        res.status(500).json({ success: false, msg: "Failed to send support message." });
+    }
+};
+
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, Support };

@@ -13,6 +13,7 @@ const AdminContextProvider = (props) => {
   const [appointments, setAppointments] = useState([]);
   const [dashData, setDashData] = useState(false);
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const [queries, setQueries] = useState([]);
 
   const getAllDoctors = async () => {
     try {
@@ -100,6 +101,30 @@ const AdminContextProvider = (props) => {
       toast.error(error.message);
     }
   };
+
+  const fetchQueries = async () => {
+    try {
+      const response = await axios.get(backendUrl + "/api/admin/queries", {
+        headers: { aToken },
+      });
+
+      if (response.data.success) {
+        // Sort: isResponded = false comes first
+        const sorted = response.data.queries.sort((a, b) => {
+          return a.isResponded === b.isResponded ? 0 : a.isResponded ? 1 : -1;
+        });
+
+        setQueries(sorted);
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching queries:", error);
+      setError("Failed to fetch queries");
+    }
+  };
+
+
   const value = {
     aToken,
     setAToken,
@@ -113,6 +138,8 @@ const AdminContextProvider = (props) => {
     cancelAppointment,
     dashData,
     getDashData,
+    queries,
+    fetchQueries,
   };
   return (
     <AdminContext.Provider value={value}>

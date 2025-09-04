@@ -7,6 +7,8 @@ import doctorModel from '../models/doctorModel.js';
 import jwt from 'jsonwebtoken'
 import appointmentModel from '../models/appointmentModel.js';
 import userModel from '../models/userModel.js';
+import Query from '../models/Query.js';
+import { sendMail } from '../config/sendMail.js';
 
 const addDoctor = async (req, res) => {
     try {
@@ -139,23 +141,105 @@ const appointmentCancel = async (req, res) => {
 
 //api to get dashboard data for admin panel
 
-const adminDashboard= async(req,res)=>{
+const adminDashboard = async (req, res) => {
     try {
-        const doctors= await doctorModel.find({})
-        const users= await userModel.find({})
-        const appointments= await appointmentModel.find({})
+        const doctors = await doctorModel.find({})
+        const users = await userModel.find({})
+        const appointments = await appointmentModel.find({})
         //we will get number of doc, user,appointment
-        const dashData= {
+        const dashData = {
             doctors: doctors.length,
             appointments: appointments.length,
             patients: users.length,
-            latestAppointments: appointments.reverse().slice(0,5)
+            latestAppointments: appointments.reverse().slice(0, 5)
 
         }
-        res.json({success:true,dashData})
+        res.json({ success: true, dashData })
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })
     }
 }
-export { addDoctor, loginAdmin, allDoctors, appointmentAdmin, appointmentCancel,adminDashboard }
+
+const fetchQueries = async (req, res) => {
+    try {
+
+        const queries = await Query.find().sort({ createdAt: 1 });
+        res.json({ success: true, queries });
+
+    } catch (error) {
+        console.error("Error fetching queries:", error);
+        res.json({ success: false, message: "Internal server error" });
+
+    }
+}
+
+const queryResponse = async (req, res) => {
+    try {
+        const { response } = req.body;
+        const queryId = req.params.id;
+
+        if (!queryId) {
+            return res.json({ success: false, message: "Query ID is required" });
+        }
+        if (!response) {
+            return res.json({ success: false, message: "Response is required" });
+        }
+
+        const query = await Query.findById(queryId);
+        if (!query) {
+            return res.json({ success: false, message: "Query not found" });
+        }
+
+        query.response = response;
+        query.isResponded = true;
+        await query.save();
+
+        const subject = "Response to Your Support Query";
+        const html = `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+              <h2 style="color: #4A90E2;">Hello ${query.name},</h2>
+              <p>Thank you for reaching out to us. Below is our response to your query: <strong>${query.message}</strong></p>
+
+              <blockquote style="margin: 16px 0; padding: 10px 16px; background-color: #f9f9f9; border-left: 4px solid #4A90E2;">
+                ${response}
+              </blockquote>
+
+              <p>If you have any further questions, feel free to reply to this email.</p>
+
+              <br/>
+              <p>Best regards,<br/>
+              <strong>Prescripto</strong><br/>
+              Support Team</p>
+            </div>
+        `;
+
+        await sendMail(query.email, subject, html);
+
+        res.json({ success: true, message: "Response saved and email sent." });
+
+    } catch (error) {
+        console.error("Error responding to query:", error);
+        res.json({ success: false, message: "Internal server error" });
+    }
+};
+
+const deleteQuery = async (req, res) => {
+    try {
+        const queryId = req.params.id;
+        if (!queryId) {
+            return res.json({ success: false, message: "Query ID is required" });
+        }
+
+
+        await Query.findByIdAndDelete(queryId);
+        res.json({ success: true, message: "Query deleted successfully" });
+
+    } catch (error) {
+        console.error("Error deleting query:", error);
+        res.json({ success: false, message: error.message });
+
+    }
+}
+
+export { addDoctor, loginAdmin, allDoctors, appointmentAdmin, appointmentCancel, adminDashboard, fetchQueries, queryResponse, deleteQuery };
