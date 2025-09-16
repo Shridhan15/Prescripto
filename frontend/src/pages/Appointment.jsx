@@ -132,6 +132,7 @@ const Appointments = () => {
   useEffect(() => {
     fetchDocInfo();
   }, [doctors, docId]);
+  docInfo && console.log("Doctor Information", docInfo);
 
   useEffect(() => {
     getAvailableSlots();
@@ -140,6 +141,12 @@ const Appointments = () => {
   useEffect(() => {
     console.log(docSlots);
   }, [docSlots]);
+
+  const handleSendMessage = () => {
+    navigate("/messages", {
+      state: { docId: docInfo._id, docName: docInfo.name },
+    });
+  };
 
   return (
     docInfo && (
@@ -185,6 +192,14 @@ const Appointments = () => {
                 {docInfo.fees}
               </span>
             </p>
+            <div className="mt-4">
+              <button
+                onClick={handleSendMessage}
+                className="cursor-pointer px-6 py-2 rounded-lg bg-primary text-white font-semibold shadow-md  "
+              >
+                Send Message
+              </button>
+            </div>
           </div>
         </div>
 

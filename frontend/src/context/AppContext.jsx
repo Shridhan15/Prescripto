@@ -1,13 +1,15 @@
-import { createContext, useEffect } from "react";
+import { createContext, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { useState } from "react";
+import MessageNotification from "../components/MessageNotification";
 
 export const AppContext = createContext();
 
 const AppContextProvider = (props) => {
   const currenySymbol = "$";
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const [messageNotifications, setMessageNotifications] = useState([]);
 
   const [doctors, setDoctors] = useState([]);
   const [token, setToken] = useState(
@@ -45,6 +47,47 @@ const AppContextProvider = (props) => {
     }
   };
 
+  useEffect(() => {
+    if (!token || !userData?._id) return;
+
+    const eventSource = new EventSource(
+      `${backendUrl}/api/messages/sse?token=${token}`
+    );
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "connected") return;
+
+        if (data.to_user_id._id === userData._id) {
+          pushMessageNotification(data.from_user_id, data.text);
+
+          if (Notification.permission === "granted") {
+            new Notification(`${data.from_user_id.name}`, { body: data.text });
+          }
+        }
+      } catch (err) {
+        console.error("SSE parse error", err);
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error("SSE error:", err);
+      eventSource.close();
+    };
+
+    return () => eventSource.close();
+  }, [backendUrl, token, userData]);
+
+  const pushMessageNotification = (sender, message) => {
+    const id = Date.now();
+    setMessageNotifications((prev) => [...prev, { id, sender, message }]);
+  };
+
+  const removeMessageNotification = (id) => {
+    setMessageNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
   const value = {
     doctors,
     getDoctorsData,
@@ -55,6 +98,8 @@ const AppContextProvider = (props) => {
     userData,
     setUserData,
     loadUserProfileData,
+    messageNotifications,
+    setMessageNotifications,
   };
 
   useEffect(() => {
@@ -71,7 +116,18 @@ const AppContextProvider = (props) => {
 
   return (
     // means all the child componentes wrapped inside AppContextProvider will be able to access the context data
-    <AppContext.Provider value={value}>{props.children}</AppContext.Provider>
+    <AppContext.Provider value={value}>
+      {props.children}
+      <div className="fixed top-20 right-4 z-50 space-y-2">
+        {messageNotifications.map((n) => (
+          <MessageNotification
+            key={n.id}
+            notification={n}
+            onClose={removeMessageNotification}
+          />
+        ))}
+      </div>
+    </AppContext.Provider>
   );
 };
 export default AppContextProvider;
