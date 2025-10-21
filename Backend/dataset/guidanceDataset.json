@@ -1,0 +1,71 @@
+[
+  {
+    "category": "Appointment",
+    "keywords": [
+      "book appointment",
+      "schedule appointment",
+      "consult doctor",
+      "see doctor",
+      "appointment booking"
+    ],
+    "path": "Dashboard > Consult Doctor > Select Category > Select Doctor > Book Appointment",
+    "link": "/dashboard/consult"
+  },
+  {
+    "category": "Appointment History",
+    "keywords": [
+      "previous appointments",
+      "my appointments",
+      "consultation history",
+      "view past appointments",
+      "appointment history"
+    ],
+    "path": "Dashboard > My Appointments / Medical History",
+    "link": "/dashboard/history"
+  },
+  {
+    "category": "Doctor Category",
+    "keywords": [
+      "general physician",
+      "gynecologist",
+      "dermatologist",
+      "pediatrician",
+      "neurologist",
+      "gastroenterologist",
+      "skin doctor",
+      "child doctor",
+      "brain doctor",
+      "stomach doctor",
+      "women doctor"
+    ],
+    "path": "Dashboard > Consult Doctor > Select Category > Choose Doctor",
+    "link": "/dashboard/consult"
+  },
+  {
+    "category": "Doctor Info",
+    "keywords": [
+      "who is a neurologist",
+      "what does a gastroenterologist do",
+      "what is a dermatologist",
+      "who is a pediatrician",
+      "what is a gynecologist",
+      "who is a general physician"
+    ],
+    "path": "Dashboard > Consult Doctor > Select Category > Doctor list/info",
+    "link": "/dashboard/consult"
+  },
+  {
+    "category": "Fallback",
+    "keywords": [
+      "not satisfied",
+      "need human help",
+      "contact admin",
+      "talk to support",
+      "send query to admin",
+      "cannot find answer",
+      "need assistance"
+    ],
+    "path": "You can send your query to the admin using the 'Send to Admin' button",
+    "link": "/support"
+  }
+]

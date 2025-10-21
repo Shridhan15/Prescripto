@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
     {
-        from_user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-        to_user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        from_user_id: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
+        to_user_id: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
         text: { type: String, trim: true, required: true },
         seen: { type: Boolean, default: false },
     },

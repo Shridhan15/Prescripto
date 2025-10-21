@@ -193,12 +193,12 @@ const Appointments = () => {
               </span>
             </p>
             <div className="mt-4">
-              <button
+              {/* <button
                 onClick={handleSendMessage}
                 className="cursor-pointer px-6 py-2 rounded-lg bg-primary text-white font-semibold shadow-md  "
               >
                 Send Message
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

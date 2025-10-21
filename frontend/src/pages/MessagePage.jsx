@@ -17,11 +17,14 @@ function MessagePage() {
   const location = useLocation();
   const { docId: openChatUserId, docName } = location.state || {};
 
+  const messagesEndRef = useRef();
+
   useEffect(() => {
-    if (Notification.permission !== "granted") {
-      Notification.requestPermission();
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
     }
-  }, []);
+  }, [messages]);
+  console.log("userData before fetchChats:", userData);
 
   useEffect(() => {
     if (!token || !userData?._id) return;
@@ -33,24 +36,22 @@ function MessagePage() {
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === "connected") return; // skip initial msg
+        if (data.type === "connected") return; // skip initial message
 
-        // Update messages if chat is open
-        if (
-          selectedChat &&
-          (data.from_user_id._id === getOtherUser(selectedChat)._id ||
-            data.to_user_id._id === getOtherUser(selectedChat)._id)
-        ) {
-          setMessages((prev) => [...prev, data]);
-        }
+        // ✅ Ensure both users exist
+        if (!data.from_user_id || !data.to_user_id) return;
 
-        // Update recent chats
+        // 1️⃣ Compute the other user from incoming message
         const otherUser =
-          data.from_user_id._id === userData._id
+          String(data.from_user_id._id) === String(userData._id)
             ? data.to_user_id
             : data.from_user_id;
 
+        if (!otherUser || !otherUser._id) return;
+
         const chatId = getChatId(userData, otherUser);
+
+        // 2️⃣ Update recent chats (left panel)
         setChats((prev) => {
           const filtered = prev.filter(
             (chat) => getChatId(chat.from_user_id, chat.to_user_id) !== chatId
@@ -60,22 +61,29 @@ function MessagePage() {
               _id: chatId,
               from_user_id: userData,
               to_user_id: otherUser,
-              lastMessage: data.text,
+              lastMessage: data.text || "",
             },
             ...filtered,
           ];
         });
 
-        // Browser notification if I'm the receiver
-        if (data.to_user_id._id === userData._id) {
+        // 3️⃣ Update messages only if the selected chat matches
+        if (selectedChat && getOtherUser(selectedChat)?._id === otherUser._id) {
+          setMessages((prev) => [...prev, data]);
+        }
+
+        // 4️⃣ Browser notification if current user is receiver
+        if (String(data.to_user_id._id) === String(userData._id)) {
           pushMessageNotification(data.from_user_id, data.text);
 
           if (Notification.permission === "granted") {
-            new Notification(`${data.from_user_id.name}`, { body: data.text });
+            new Notification(`${data.from_user_id.name}`, {
+              body: data.text,
+            });
           }
         }
       } catch (err) {
-        console.error("SSE parse error", err);
+        console.error("SSE parse error:", err);
       }
     };
 
@@ -91,13 +99,11 @@ function MessagePage() {
 
   //get the other user in a chat
   const getOtherUser = (chat) => {
-    if (!chat || !chat.from_user_id || !chat.to_user_id) {
+    if (!chat || !chat.from_user_id || !chat.to_user_id || !userData?._id) {
       return { _id: "", name: "Unknown" };
     }
-    if (!userData || !userData._id) {
-      return { _id: "", name: "Unknown" };
-    }
-    return chat.from_user_id._id === userData._id
+
+    return String(chat.from_user_id._id) === String(userData._id)
       ? chat.to_user_id
       : chat.from_user_id;
   };
@@ -110,35 +116,44 @@ function MessagePage() {
   // Fetch recent chats
   useEffect(() => {
     const fetchChats = async () => {
-      if (!token) return; // skip if no token
+      if (!token || !userData?._id) return;
 
       try {
-        const res = await axios.get(`${backendUrl}/api/messages/recent`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // Make POST request to get recent chats
+        const res = await axios.post(
+          `${backendUrl}/api/messages/recent`,
+          {}, // body can be empty if your backend uses token
+          { headers: { token } }
+        );
 
         const data = res.data;
-        const messages = Array.isArray(data.messages) ? data.messages : [];
+        const fetchedChats = Array.isArray(data.messages) ? data.messages : [];
 
-        if (data.success) setChats(messages);
+        if (data.success) {
+          // 1️⃣ Set chats for left panel
+          setChats(fetchedChats);
 
-        if (openChatUserId) {
-          let existingChat = messages.find(
-            (chat) =>
-              chat.from_user_id?._id === openChatUserId ||
-              chat.to_user_id?._id === openChatUserId
-          );
+          // 2️⃣ If a specific chat is opened via route
+          if (openChatUserId) {
+            let existingChat = fetchedChats.find(
+              (chat) =>
+                String(chat.from_user_id?._id) === String(openChatUserId) ||
+                String(chat.to_user_id?._id) === String(openChatUserId)
+            );
 
-          if (!existingChat) {
-            existingChat = {
-              _id: `new-${openChatUserId}`,
-              from_user_id: userData,
-              to_user_id: { _id: openChatUserId, name: docName },
-              text: "",
-            };
+            if (!existingChat) {
+              // Create a new chat object if it doesn't exist yet
+              existingChat = {
+                _id: `new-${openChatUserId}`,
+                from_user_id: userData,
+                to_user_id: { _id: openChatUserId, name: docName },
+                lastMessage: "",
+              };
+            }
+
+            // 3️⃣ Set the selected chat
+            setSelectedChat(existingChat);
           }
-
-          setSelectedChat(existingChat);
         }
       } catch (err) {
         console.error("Failed to fetch chats:", err);
@@ -148,10 +163,14 @@ function MessagePage() {
     fetchChats();
   }, [token, backendUrl, openChatUserId, userData, docName]);
 
+  useEffect(() => {
+    console.log("All messages (updated):", chats);
+  }, [chats]);
+
   // Fetch messages for selected chat
   useEffect(() => {
     const fetchMessages = async () => {
-      if (!selectedChat) return;
+      if (!selectedChat || !getOtherUser(selectedChat)?._id) return;
 
       const otherUserId = getOtherUser(selectedChat)._id;
 
@@ -159,7 +178,7 @@ function MessagePage() {
         const res = await axios.post(
           `${backendUrl}/api/messages/chat`,
           { to_user_id: otherUserId },
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { token } }
         );
         const data = res.data;
 
@@ -179,30 +198,28 @@ function MessagePage() {
 
   // Send message
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedChat) return;
+    if (!newMessage.trim() || !selectedChat || !getOtherUser(selectedChat)?._id)
+      return;
 
     const otherUser = getOtherUser(selectedChat);
+    const messageText = newMessage.trim();
 
     try {
       const res = await axios.post(
         `${backendUrl}/api/messages/send`,
         {
           to_user_id: otherUser._id,
-          text: newMessage,
+          text: messageText,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { token } }
       );
 
-      const data = await res.data;
-      if (data.success) {
+      const data = res.data;
+
+      if (data.success && data.message) {
         const chatId = getChatId(userData, otherUser);
 
-        // Only update chat list (recent chats)
+        // 1️⃣ Update recent chats
         setChats((prev) => {
           const filtered = prev.filter(
             (chat) => getChatId(chat.from_user_id, chat.to_user_id) !== chatId
@@ -218,10 +235,15 @@ function MessagePage() {
           ];
         });
 
+        setMessages((prev) => [...prev, data.message]);
+
         setNewMessage("");
+        setTimeout(() => {
+          scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 50);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Failed to send message:", err);
     }
   };
 
@@ -238,14 +260,15 @@ function MessagePage() {
           Messages
         </div>
         <div className="flex-1  overflow-y-auto mt-20">
-          {chats.map((chat) => {
+          {chats?.map((chat) => {
             const otherUser = getOtherUser(chat);
+            if (!otherUser._id) return null;
             const chatId = getChatId(userData, otherUser);
 
             return (
               <div
                 key={chatId}
-                className={`p-4 cursor-pointer transition ${
+                className={`p-4 cursor-pointer text-red-900 transition ${
                   selectedChat &&
                   getChatId(userData, getOtherUser(selectedChat)) === chatId
                     ? "bg-violet-50"
@@ -269,13 +292,13 @@ function MessagePage() {
                     />
                   ) : (
                     <img
-                      src={a.profile_icon}
+                      src={assets.profile_icon}
                       alt="profile"
                       className="w-10 h-10 rounded-full"
                     />
                   )}
                   <div>
-                    <div className="font-semibold text-gray-800">
+                    <div className="font-semibold text-red-800">
                       {otherUser?.name || "Unknown"}
                     </div>
                     <div className="text-sm text-gray-500 truncate">
@@ -295,14 +318,17 @@ function MessagePage() {
           <>
             <div className="p-4 flex gap-3 border-b border-gray-200 bg-gray-50 font-semibold sticky  z-10">
               <img
-                src={getOtherUser(selectedChat).image  }
+                src={getOtherUser(selectedChat).image}
                 className="w-8 h-8 rounded-full object-cover inline-block ml-4"
                 alt=""
               />
               {getOtherUser(selectedChat).name}
             </div>
 
-            <div className="flex-1 p-4 overflow-y-auto bg-gray-100">
+            <div
+              className="flex-1 p-4 overflow-y-auto bg-gray-100"
+              ref={messagesEndRef}
+            >
               {messages.map((msg) => (
                 <div
                   key={msg._id}

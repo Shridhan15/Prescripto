@@ -57,13 +57,15 @@ const AppContextProvider = (props) => {
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === "connected") return;
+        if (data?.type === "connected") return;
 
-        if (data.to_user_id._id === userData._id) {
-          pushMessageNotification(data.from_user_id, data.text);
+        if (data?.to_user_id?._id === userData?._id) {
+          pushMessageNotification(data?.from_user_id, data?.text);
 
           if (Notification.permission === "granted") {
-            new Notification(`${data.from_user_id.name}`, { body: data.text });
+            new Notification(`${data?.from_user_id?.name}`, {
+              body: data?.text,
+            });
           }
         }
       } catch (err) {

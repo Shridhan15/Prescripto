@@ -7,6 +7,8 @@ import doctorModel from '../models/doctorModel.js';
 import appointmentModel from '../models/appointmentModel.js';
 import razorpay from 'razorpay'
 import Query from '../models/Query.js';
+import guidanceDataset from "../dataset/guidanceDataset.json" assert { type: "json" };
+
 
 // api to register user 
 const registerUser = async (req, res) => {
@@ -273,4 +275,30 @@ const Support = async (req, res) => {
     }
 };
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, Support };
+const botSupport = async (req, res) => {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ response: "Query is required" });
+    console.log("query in userController: ", query)
+
+    const lowerQuery = query.toLowerCase();
+
+    // Search dataset for keywords
+    const result = guidanceDataset.find(entry =>
+        entry.keywords.some(k => lowerQuery.includes(k))
+    );
+
+    if (result) {
+        res.json({
+            response: `Bot: ${result.path} ${result.link ? `Click here: ${result.link}` : ""}`
+        });
+    } else {
+        // fallback message
+        const fallback = guidanceDataset.find(entry => entry.category === "Fallback");
+        res.json({
+            response: fallback.path
+        });
+    }
+}
+
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, Support, botSupport };
+

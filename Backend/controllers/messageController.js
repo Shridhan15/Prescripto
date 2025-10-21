@@ -1,6 +1,7 @@
- 
+
 import jwt from "jsonwebtoken";
 import Message from "../models/Message.js";
+import mongoose from "mongoose";
 // In-memory SSE connections
 // In-memory SSE connections
 const connections = {}; // userId -> [res1, res2, ...]
@@ -43,7 +44,7 @@ export const sseController = (req, res) => {
 export const sendMessage = async (req, res) => {
     try {
         const { to_user_id, text } = req.body;
-        const from_user_id = req.user._id;
+        const from_user_id = req.body.userId;
 
         const newMessage = new Message({
             from_user_id,
@@ -82,7 +83,7 @@ export const sendMessage = async (req, res) => {
 
 export const getChatMessages = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = req.body.userId;
         const { to_user_id } = req.body;
 
         const messages = await Message.find({
@@ -91,14 +92,16 @@ export const getChatMessages = async (req, res) => {
                 { from_user_id: to_user_id, to_user_id: userId }
             ]
         })
-            .populate("from_user_id", "name _id profileImage")
-            .populate("to_user_id", "name _id profileImage")
+            .populate("from_user_id", "name _id image")
+            .populate("to_user_id", "name _id image")
             .sort({ createdAt: -1 });
 
         await Message.updateMany(
             { from_user_id: to_user_id, to_user_id: userId, seen: false },
             { seen: true }
         );
+        console.log("userId:", req.body.userId, "to_user_id:", req.body.to_user_id);
+
 
         res.json({ success: true, messages });
     } catch (error) {
@@ -109,20 +112,29 @@ export const getChatMessages = async (req, res) => {
 // Get recent chats for logged-in user
 export const getUserRecentMessages = async (req, res) => {
     try {
-        const userId = req.user._id.toString();
+        const { userId } = req.body; // authUser sets this from token
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ success: false, message: "Invalid userId" });
+        }
 
-        // Get all messages involving the user, sorted by newest first
         const messages = await Message.find({
-            $or: [{ from_user_id: userId }, { to_user_id: userId }],
+            $or: [
+                { from_user_id: new mongoose.Types.ObjectId(userId) },
+                { to_user_id: new mongoose.Types.ObjectId(userId) },
+            ],
         })
-            .populate("from_user_id to_user_id")
+            .populate("from_user_id to_user_id", "name _id image")
             .sort({ createdAt: -1 });
+
 
         const chatMap = {};
         for (const msg of messages) {
+            if (!msg.from_user_id || !msg.to_user_id) continue;
+
             const idA = msg.from_user_id._id.toString();
             const idB = msg.to_user_id._id.toString();
             const chatId = [idA, idB].sort().join("_");
+
             if (!chatMap[chatId]) {
                 chatMap[chatId] = {
                     _id: chatId,
@@ -135,9 +147,11 @@ export const getUserRecentMessages = async (req, res) => {
 
         res.json({ success: true, messages: Object.values(chatMap) });
     } catch (error) {
+        console.error("getUserRecentMessages error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
 
 
 // 🔹 Keep-alive (every 15s)
