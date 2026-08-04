@@ -327,13 +327,13 @@ Prescripto/
 Clone the repository.
 
 ```bash
-git clone https://github.com/<your-username>/prescripto.git
+git clone https://github.com/Shridhan15/Prescripto.git  
 ```
 
 Move inside the project.
 
 ```bash
-cd prescripto
+cd Prescripto
 ```
 
 ---
@@ -350,7 +350,7 @@ npm install
 ## Install Backend
 
 ```bash
-cd ../backend
+cd ../Backend
 npm install
 ```
 
@@ -393,7 +393,7 @@ RAZORPAY_SECRET=
 CURRENCY=USD
 ```
 
-> Never commit your `.env` file to GitHub.
+ 
 
 ---
 
@@ -667,8 +667,7 @@ The following features are planned for future releases.
 ### 💳 Payment Enhancements
 
 - Stripe integration
-- UPI support
-- PayPal support
+- UPI support 
 - Invoice generation
 - Payment history dashboard
 
@@ -753,34 +752,6 @@ This project helped strengthen my understanding of:
 
 ---
 
-# 🤝 Contributing
-
-Contributions are welcome!
-
-If you would like to improve Prescripto:
-
-1. Fork the repository.
-2. Create a new feature branch.
-
-```bash
-git checkout -b feature/YourFeature
-```
-
-3. Commit your changes.
-
-```bash
-git commit -m "Add YourFeature"
-```
-
-4. Push your branch.
-
-```bash
-git push origin feature/YourFeature
-```
-
-5. Open a Pull Request.
-
----
 
 # 📝 License
 
@@ -801,39 +772,12 @@ Feel free to use, modify, and distribute this project for educational and person
 
 ### Connect with me
 
-- GitHub: https://github.com/your-github-username
-- LinkedIn: https://linkedin.com/in/your-linkedin
-- Portfolio: https://your-portfolio.com
+- GitHub: https://github.com/Shridhan15
+- LinkedIn: https://www.linkedin.com/in/shridhan-suman-3970a3293/
+- Portfolio: https://portfolio-chi-ecru-34.vercel.app/
 
----
 
-# 🙏 Acknowledgements
 
-Special thanks to:
-
-- MongoDB
-- Express.js
-- React
-- Node.js
-- Tailwind CSS
-- Cloudinary
-- Razorpay
-- Render
-
-for providing the tools and services that made this project possible.
-
----
-
-# ⭐ Support
-
-If you found this project useful:
-
-- ⭐ Star this repository
-- 🍴 Fork it
-- 🐛 Report issues
-- 💡 Suggest new features
-
-Your support helps improve the project and encourages future development.
 
 ---
 
